@@ -1,5 +1,10 @@
+import os
+from multiprocessing.pool import ThreadPool
+
 from api import tiktok
+from api import downloader
 import argparse
+import configuration
 
 
 def parse_args():
@@ -22,14 +27,22 @@ def parse_args():
     return parser.parse_args()
 
 
+def resolve_configurations():
+    # Resolve temporary path
+    configuration.Paths.tmp_path = os.path.join(configuration.Paths.root_path, "tmp")
+    if not os.path.isdir(configuration.Paths.tmp_path):
+        os.mkdir(configuration.Paths.tmp_path)
+
+    print(configuration.Paths.tmp_path)
+
+
 if __name__ == "__main__":
     args = parse_args()
+    resolve_configurations()
 
     videos = tiktok.get_videos_by_hash_tag(hash_tag=args.hash_tag, limit=args.video_limit)
 
-    for video in videos["media"]:
-        author_id = video["author"]["uniqueId"]
-        video_id = video["video_id"]
+    with ThreadPool(20) as pool:
+        generated_videos = pool.map(downloader.video_pipeline, videos["media"])
 
-        url = tiktok.get_no_watermark_video(author_id=author_id, video_id=video_id)
-        print(url)
+    print(generated_videos)

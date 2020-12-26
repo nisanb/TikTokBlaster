@@ -1,8 +1,10 @@
 import os
+import pprint
 from multiprocessing.pool import ThreadPool
 
 from api import tiktok
 from api import downloader
+from api import compiler
 import argparse
 import configuration
 
@@ -45,4 +47,8 @@ if __name__ == "__main__":
     with ThreadPool(20) as pool:
         generated_videos = pool.map(downloader.video_pipeline, videos["media"])
 
-    print(generated_videos)
+    generated_videos = list(filter(lambda a: a != "", generated_videos))
+    if len(generated_videos) < args.video_limit:
+        print(f"Did not fetch enough videos! required: {args.video_limit}, generated: {len(generated_videos)}")
+
+    compiler.generate_video(generated_videos)

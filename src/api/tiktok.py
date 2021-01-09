@@ -10,13 +10,16 @@ headers = {
 
 def get_videos_by_hash_tag(hash_tag: str = "puppy", limit: int = 5):
     url = "https://tiktok.p.rapidapi.com/live/hashtag/feed"
+
     querystring = {
         "name": hash_tag,
-        "limit": limit
+        "limit": str(limit)
     }
 
     response = requests.request("GET", url, headers=headers, params=querystring)
-    return loads(response.text)
+    response = loads(response.text)["media"]
+
+    return response
 
 
 def get_no_watermark_video(author_id: str, video_id: str):
